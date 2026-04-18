@@ -1,4 +1,3 @@
-import gymnasium as gym
 import numpy as np
 import torch
 import time
@@ -7,65 +6,30 @@ import argparse
 
 from Config import PGConfig
 from Helpers import smooth, LearningCurvePlot
-from REINFORCEAgent import REINFORCEAgent
+from REINFORCEAgent import train_REINFORCE
+from ACAgent import train_AC
+from A2CAgent import train_A2C
 
 
-def train_one_run(params, device, AgentClass):
-    env = gym.vector.SyncVectorEnv([
-        lambda: gym.make("CartPole-v1") for _ in range(params.num_envs)
-    ])
-    eval_env = gym.make("CartPole-v1")
 
-    n_actions = env.single_action_space.n
-    n_observations = env.single_observation_space.shape[0]
-
-    agent = AgentClass(n_observations, n_actions, device, params)
-    eval_returns = []
-
-    states_buf  = [[] for _ in range(params.num_envs)]
-    actions_buf = [[] for _ in range(params.num_envs)]
-    rewards_buf = [[] for _ in range(params.num_envs)]
-
-    obs, _ = env.reset()
-    states = torch.tensor(obs, dtype=torch.float32, device=device)
-
-    while agent.steps_done < params.total_steps:
-        actions, _ = agent.select_action(states)
-        obs, rewards, terminated, truncated, _ = env.step(actions.cpu().numpy())
-
-        for i in range(params.num_envs):
-            states_buf[i].append(states[i])
-            actions_buf[i].append(actions[i])
-            rewards_buf[i].append(rewards[i])
-
-        dones = terminated | truncated
-        for i in range(params.num_envs):
-            if dones[i]:
-                agent.update(states_buf[i], actions_buf[i], rewards_buf[i])
-                states_buf[i]  = []
-                actions_buf[i] = []
-                rewards_buf[i] = []
-
-        agent.steps_done += params.num_envs
-        states = torch.tensor(obs, dtype=torch.float32, device=device)
-
-        if agent.steps_done % params.evaluate_every < params.num_envs:
-            ret = agent.evaluate(eval_env, eval_episodes=params.eval_episodes)
-            eval_returns.append(ret)
-            print(f'Steps: {agent.steps_done} | Reward: {ret:.1f}')
-
-    env.close()
-    eval_env.close()
-    return eval_returns
+def train_one_run(agent_name, params, device):
+    if agent_name == 'REINFORCE':
+        return train_REINFORCE(params, device)
+    elif agent_name == 'AC':
+        return train_AC(params, device)
+    elif agent_name == 'A2C':
+        return train_A2C(params, device)
+    else:
+        raise ValueError(f'Unknown agent: {agent_name}')
 
 
-def average_returns(params, device, AgentClass):
+def average_returns(agent_name, params, device):
     all_runs = []
     start_time = time.time()
 
     for i in range(params.num_rep):
         print(f"  Repetition {i+1}/{params.num_rep}")
-        run_returns = train_one_run(params, device, AgentClass)
+        run_returns = train_one_run(agent_name, params, device)
         all_runs.append(run_returns)
 
     min_len = min(len(r) for r in all_runs)
@@ -88,8 +52,8 @@ def run_experiment(experiments, base_params, device, title, save_name):
     plot.set_ylim(0, 520)
 
     for exp in experiments:
-        label    = exp["label"]
-        AgentClass = exp["agent"]
+        label      = exp["label"]
+        agent_name = exp["agent_name"]
         overrides  = exp["params"]
 
         print(f"\nRunning: {label}")
@@ -97,7 +61,7 @@ def run_experiment(experiments, base_params, device, title, save_name):
         params_dict.update(overrides)
         params = PGConfig(**params_dict)
 
-        mean_curve, std_curve = average_returns(params, device, AgentClass)
+        mean_curve, std_curve = average_returns(agent_name, params, device)
         timesteps = list(range(
             params.evaluate_every,
             params.total_steps + 1,
@@ -121,26 +85,49 @@ def run_experiment(experiments, base_params, device, title, save_name):
 
 def exp_reinforce(base_params, device):
     run_experiment(
-        [{"label": "REINFORCE", "agent": REINFORCEAgent, "params": {}}],
+        [{"label": "REINFORCE", "agent_name": "REINFORCE", "params": {}}],
         base_params, device,
         title="REINFORCE on CartPole-v1",
         save_name="reinforce"
     )
 
 
-def exp_all_pg(base_params, device):
-    # WE ADD AC AND A2C HERE LATER
+def exp_ac(base_params, device):
     run_experiment(
-        [{"label": "REINFORCE", "agent": REINFORCEAgent, "params": {}}],
+        [
+            {"label": "AC",        "agent_name": "AC",        "params": {}},
+        ],
         base_params, device,
-        title="PG Methods on CartPole-v1",
-        save_name="pg_all"
+        title="AC Methods on CartPole-v1",
+        save_name="ac"
     )
 
+def exp_a2c(base_params, device):
+    run_experiment(
+        [
+            {"label": "A2C",        "agent_name": "A2C",        "params": {}},
+        ],
+        base_params, device,
+        title="A2C Methods on CartPole-v1",
+        save_name="a2c"
+    )
 
+def exp_all(base_params, device):
+    run_experiment(
+        [
+            {"label": "REINFORCE", "agent_name": "REINFORCE", "params": {}},
+            {"label": "AC", "agent_name": "AC", "params": {}},
+            {"label": "A2C",        "agent_name": "A2C",        "params": {}},
+        ],
+        base_params, device,
+        title="",
+        save_name="all_results"
+    )
 EXPERIMENTS = {
     "reinforce": exp_reinforce,
-    "all":       exp_all_pg,
+    "ac":       exp_ac,
+    "a2c": exp_ac,
+    "all" : exp_all,
 }
 
 if __name__ == '__main__':

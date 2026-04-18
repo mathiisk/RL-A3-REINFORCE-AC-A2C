@@ -1,11 +1,10 @@
 import numpy as np
+import gymnasium as gym
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Categorical
 
 from PolicyNetwork import PolicyNetwork
-
 
 
 class REINFORCEAgent:
@@ -60,7 +59,8 @@ class REINFORCEAgent:
         returns = []
         
         for i in range(eval_episodes):
-            obs, _ = eval_env.reset()
+            result = eval_env.reset()
+            obs = result[0] if isinstance(result, tuple) else result
             state = torch.tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)
             episode_return = 0.0
             terminated, truncated = False, False
@@ -68,7 +68,7 @@ class REINFORCEAgent:
             with torch.no_grad():
                 while not (terminated or truncated):
                     action, _ = self.select_action(state, greedy=True)
-                    obs, reward, terminated, truncated, _ = eval_env.step(action.item())
+                    obs, reward, terminated, truncated, info = eval_env.step(action.item())
                     episode_return += reward
                     state = torch.tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)
                     
@@ -76,4 +76,53 @@ class REINFORCEAgent:
         
         self.policy_net.train()
         return np.mean(returns)
-            
+
+
+def train_REINFORCE(params, device):
+    env = gym.vector.SyncVectorEnv([
+        lambda: gym.make("CartPole-v1") for _ in range(params.num_envs)
+    ])
+    eval_env = gym.make("CartPole-v1")
+    n_actions = env.single_action_space.n
+    n_observations = env.single_observation_space.shape[0]
+
+    agent = REINFORCEAgent(n_observations, n_actions, device, params)
+    eval_returns = []
+
+    states_buf  = [[] for _ in range(params.num_envs)]
+    actions_buf = [[] for _ in range(params.num_envs)]
+    rewards_buf = [[] for _ in range(params.num_envs)]
+
+    result = env.reset()
+    obs = result[0] if isinstance(result, tuple) else result
+    states = torch.tensor(obs, dtype=torch.float32, device=device)
+
+    while agent.steps_done < params.total_steps:
+        actions, _ = agent.select_action(states)
+        obs, rewards, terminated, truncated, info = env.step(actions.cpu().numpy())
+        dones = terminated | truncated
+
+
+        for i in range(params.num_envs):
+            states_buf[i].append(states[i])
+            actions_buf[i].append(actions[i])
+            rewards_buf[i].append(rewards[i])
+
+        for i in range(params.num_envs):
+            if dones[i]:
+                agent.update(states_buf[i], actions_buf[i], rewards_buf[i])
+                states_buf[i]  = []
+                actions_buf[i] = []
+                rewards_buf[i] = []
+
+        agent.steps_done += params.num_envs
+        states = torch.tensor(obs, dtype=torch.float32, device=device)
+
+        if agent.steps_done % params.evaluate_every < params.num_envs:
+            ret = agent.evaluate(eval_env, eval_episodes=params.eval_episodes)
+            eval_returns.append(ret)
+            print(f'Steps: {agent.steps_done} | Reward: {ret:.1f}')
+
+    env.close()
+    eval_env.close()
+    return eval_returns
