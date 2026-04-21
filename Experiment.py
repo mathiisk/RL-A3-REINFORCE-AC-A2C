@@ -7,6 +7,7 @@ import argparse
 from Config import PGConfig
 from Helpers import smooth, LearningCurvePlot
 from REINFORCEAgent import train_REINFORCE
+from ACAgent import train_AC
 from A2CAgent_TD import train_A2C_TD
 from A2CAgent_Bootstrap import train_A2C_Bootstrap
 

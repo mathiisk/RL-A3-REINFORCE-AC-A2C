@@ -16,7 +16,7 @@ class PolicyNetwork(nn.Module):
         return torch.softmax(self.net(x), dim=-1)
 
 
-class QValueNetwork(PolicyNetwork):
+class QValueNetwork(nn.Module):
     def __init__(self, n_obs, n_actions, hidden_size=128):
         super().__init__()
         self.net = nn.Sequential(

@@ -4,8 +4,8 @@ import torch
 import torch.optim as optim
 from torch.distributions import Categorical
 
-from Nets import PolicyNetwork
-from nets import ValueNetwork
+from Networks import PolicyNetwork
+from Networks import ValueNetwork
 
 class A2CAgent_Bootstrap():
     def __init__(self, state_size, action_size, device, config):

@@ -4,7 +4,7 @@ import torch
 import torch.optim as optim
 from torch.distributions import Categorical
 
-from Nets import PolicyNetwork
+from Networks import PolicyNetwork
 
 
 class REINFORCEAgent:
