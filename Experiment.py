@@ -118,7 +118,7 @@ def exp_a2c_td(base_params, device):
 def exp_a2c_bootstrap(base_params, device):
     run_experiment(
         [
-            {"label": "A2C_bootstrap",        "agent_name": "A2C_bootstrap",        "params": {}},
+            {"label": "A2C_Bootstrap",        "agent_name": "A2C_Bootstrap",        "params": {}},
         ],
         base_params, device,
         title="A2C (Bootstrap) Methods on CartPole-v1",
@@ -131,7 +131,7 @@ def exp_all(base_params, device):
             {"label": "REINFORCE", "agent_name": "REINFORCE", "params": {}},
             {"label": "AC", "agent_name": "AC", "params": {}},
             {"label": "A2C_TD",        "agent_name": "A2C_TD",        "params": {}},
-            {"label": "A2C_bootstrap", "agent_name": "A2C_bootstrap", "params": {}}
+            {"label": "A2C_Bootstrap", "agent_name": "A2C_Bootstrap", "params": {}}
         ],
         base_params, device,
         title="",
@@ -155,11 +155,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     torch.set_float32_matmul_precision('high')
-    device = torch.device(
-        "cuda" if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available()
-        else "cpu"
-    )
+    device = torch.device("cpu")
+    #     "cuda" if torch.cuda.is_available()
+    #     else "mps" if torch.backends.mps.is_available()
+    #     else "cpu"
+    # )
     print("Available device:", device)
 
     base_params = PGConfig()

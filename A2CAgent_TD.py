@@ -40,11 +40,11 @@ class A2CAgent_TD:
         log_probs = Categorical(probs).log_prob(actions)
 
         # Critic: V(s)
-        values = self.value_net(states).squeeze(1)
+        values = self.value_net(states).squeeze(-1)
 
         # TD target
         with torch.no_grad():
-            next_v = self.value_net(next_states).squeeze(1)
+            next_v = self.value_net(next_states).squeeze(-1)
         target = rewards_tensor + self.gamma * next_v * (1 - dones_tensor)
         advantage = target - values
 
