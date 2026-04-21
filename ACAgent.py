@@ -4,8 +4,8 @@ import torch
 import torch.optim as optim
 from torch.distributions import Categorical
 
-from PolicyNetwork import PolicyNetwork
-from QValueNetwork import QValueNetwork
+from Nets import PolicyNetwork
+from nets import QValueNetwork
 
 class ACAgent:
     def __init__(self, state_size, action_size, device, config):
@@ -50,7 +50,7 @@ class ACAgent:
                 1, next_actions.unsqueeze(1)
             ).squeeze(1)
         target = rewards_tensor + self.gamma * next_q * (1 - dones_tensor)
-        advantage = q_values - target
+        advantage = target - q_values
 
         #???? Not completely certain about the actor loss here
         actor_loss = (-log_probs * advantage.detach()).mean()

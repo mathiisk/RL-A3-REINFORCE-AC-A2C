@@ -4,10 +4,10 @@ import torch
 import torch.optim as optim
 from torch.distributions import Categorical
 
-from PolicyNetwork import PolicyNetwork
-from ValueNetwork import ValueNetwork
+from Nets import PolicyNetwork
+from nets import ValueNetwork
 
-class A2CAgent:
+class A2CAgent_Bootstrap():
     def __init__(self, state_size, action_size, device, config):
         self.device = device
         self.gamma = config.gamma
@@ -86,7 +86,7 @@ class A2CAgent:
         return np.mean(returns)
 
 
-def train_A2C(params, device):
+def train_A2C_Bootstrap(params, device):
     env = gym.vector.SyncVectorEnv([
         lambda: gym.make("CartPole-v1") for _ in range(params.num_envs)
     ])
@@ -94,7 +94,7 @@ def train_A2C(params, device):
     n_actions = env.single_action_space.n
     n_observations = env.single_observation_space.shape[0]
 
-    agent = A2CAgent(n_observations, n_actions, device, params)
+    agent = A2CAgent_Bootstrap(n_observations, n_actions, device, params)
     eval_returns = []
 
     states_buf  = [[] for _ in range(params.num_envs)]

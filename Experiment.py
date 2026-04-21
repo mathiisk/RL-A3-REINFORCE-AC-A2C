@@ -7,8 +7,8 @@ import argparse
 from Config import PGConfig
 from Helpers import smooth, LearningCurvePlot
 from REINFORCEAgent import train_REINFORCE
-from ACAgent import train_AC
-from A2CAgent import train_A2C
+from A2CAgent_TD import train_A2C_TD
+from A2CAgent_Bootstrap import train_A2C_Bootstrap
 
 
 
@@ -17,8 +17,10 @@ def train_one_run(agent_name, params, device):
         return train_REINFORCE(params, device)
     elif agent_name == 'AC':
         return train_AC(params, device)
-    elif agent_name == 'A2C':
-        return train_A2C(params, device)
+    elif agent_name == 'A2C_TD':
+        return train_A2C_TD(params, device)
+    elif agent_name == 'A2C_Bootstrap':
+        return train_A2C_Bootstrap(params, device)
     else:
         raise ValueError(f'Unknown agent: {agent_name}')
 
@@ -102,14 +104,24 @@ def exp_ac(base_params, device):
         save_name="ac"
     )
 
-def exp_a2c(base_params, device):
+def exp_a2c_td(base_params, device):
     run_experiment(
         [
-            {"label": "A2C",        "agent_name": "A2C",        "params": {}},
+            {"label": "A2C_TD",        "agent_name": "A2C_TD",        "params": {}},
         ],
         base_params, device,
-        title="A2C Methods on CartPole-v1",
-        save_name="a2c"
+        title="A2C (TD) Methods on CartPole-v1",
+        save_name="a2c_td"
+    )
+
+def exp_a2c_bootstrap(base_params, device):
+    run_experiment(
+        [
+            {"label": "A2C_bootstrap",        "agent_name": "A2C_bootstrap",        "params": {}},
+        ],
+        base_params, device,
+        title="A2C (Bootstrap) Methods on CartPole-v1",
+        save_name="a2c_bootstrap"
     )
 
 def exp_all(base_params, device):
@@ -117,7 +129,8 @@ def exp_all(base_params, device):
         [
             {"label": "REINFORCE", "agent_name": "REINFORCE", "params": {}},
             {"label": "AC", "agent_name": "AC", "params": {}},
-            {"label": "A2C",        "agent_name": "A2C",        "params": {}},
+            {"label": "A2C_TD",        "agent_name": "A2C_TD",        "params": {}},
+            {"label": "A2C_bootstrap", "agent_name": "A2C_bootstrap", "params": {}}
         ],
         base_params, device,
         title="",
@@ -126,7 +139,8 @@ def exp_all(base_params, device):
 EXPERIMENTS = {
     "reinforce": exp_reinforce,
     "ac":       exp_ac,
-    "a2c": exp_ac,
+    "a2c_td": exp_a2c_td,
+    "a2c_bootstrap": exp_a2c_bootstrap,
     "all" : exp_all,
 }
 
