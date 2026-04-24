@@ -8,8 +8,9 @@ from Config import PGConfig
 from Helpers import smooth, LearningCurvePlot
 from REINFORCEAgent import train_REINFORCE
 from ACAgent import train_AC
+from ACAgent_MC import train_AC_MC
 from A2CAgent_TD import train_A2C_TD
-from A2CAgent_Bootstrap import train_A2C_Bootstrap
+from A2CAgent_MC import train_A2C_Bootstrap
 
 
 # Shared ablation overrides
@@ -27,6 +28,8 @@ def train_one_run(agent_name, params, device):
         return train_A2C_TD(params, device)
     elif agent_name == "A2C_Bootstrap":
         return train_A2C_Bootstrap(params, device)
+    elif agent_name == "AC_MC":
+        return train_AC_MC(params, device)
     else:
         raise ValueError(f"Unknown agent: {agent_name}")
 
@@ -110,24 +113,33 @@ def exp_ac(base_params, device):
         title="AC on CartPole-v1",
         save_name="ac",
     )
+    
+def exp_ac_mc(base_params, device):
+    run_experiment(
+        [{"label": "AC_MC", "agent_name": "AC_MC", "params": {}}],
+        base_params, device,
+        title="AC MC on CartPole-v1",
+        save_name="ac_mc",
+    )
 
 
 def exp_a2c_td(base_params, device):
     run_experiment(
         [{"label": "A2C_TD", "agent_name": "A2C_TD", "params": {}}],
         base_params, device,
-        title="A2C (TD) on CartPole-v1",
+        title="A2C TD on CartPole-v1",
         save_name="a2c_td",
     )
 
 
-def exp_a2c_bootstrap(base_params, device):
+def exp_a2c_mc(base_params, device):
     run_experiment(
-        [{"label": "A2C_Bootstrap", "agent_name": "A2C_Bootstrap", "params": {}}],
+        [{"label": "A2C_MC", "agent_name": "A2C_MC", "params": {}}],
         base_params, device,
-        title="A2C (Bootstrap) on CartPole-v1",
-        save_name="a2c_bootstrap",
+        title="A2C MC on CartPole-v1",
+        save_name="a2c_mc",
     )
+    
 
 
 def exp_all(base_params, device):
@@ -136,7 +148,7 @@ def exp_all(base_params, device):
             {"label": "REINFORCE",     "agent_name": "REINFORCE",     "params": {}},
             {"label": "AC",            "agent_name": "AC",            "params": {}},
             {"label": "A2C_TD",        "agent_name": "A2C_TD",        "params": {}},
-            {"label": "A2C_Bootstrap", "agent_name": "A2C_Bootstrap", "params": {}},
+            {"label": "A2C_MC",        "agent_name": "A2C_MC",        "params": {}},
         ],
         base_params, device,
         title="PG Methods on CartPole-v1",
@@ -212,9 +224,9 @@ def exp_ablation_a2c_td_hidden(base_params, device):
 
 def exp_ablation_a2c_mc_lr_actor(base_params, device):
     run_experiment([
-        {"label": "lr_actor=1e-4", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "lr_actor": 1e-4}},
-        {"label": "lr_actor=5e-4", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "lr_actor": 5e-4}},
-        {"label": "lr_actor=1e-3", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "lr_actor": 1e-3}},
+        {"label": "lr_actor=1e-4", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_actor": 1e-4}},
+        {"label": "lr_actor=5e-4", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_actor": 5e-4}},
+        {"label": "lr_actor=1e-3", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_actor": 1e-3}},
     ], base_params, device,
        title="A2C MC - Actor LR Ablation",
        save_name="ablation_a2c_mc_lr_actor")
@@ -222,9 +234,9 @@ def exp_ablation_a2c_mc_lr_actor(base_params, device):
 
 def exp_ablation_a2c_mc_lr_critic(base_params, device):
     run_experiment([
-        {"label": "lr_critic=1e-4", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "lr_critic": 1e-4}},
-        {"label": "lr_critic=5e-4", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "lr_critic": 5e-4}},
-        {"label": "lr_critic=1e-3", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "lr_critic": 1e-3}},
+        {"label": "lr_critic=1e-4", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_critic": 1e-4}},
+        {"label": "lr_critic=5e-4", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_critic": 5e-4}},
+        {"label": "lr_critic=1e-3", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_critic": 1e-3}},
     ], base_params, device,
        title="A2C MC - Critic LR Ablation",
        save_name="ablation_a2c_mc_lr_critic")
@@ -232,9 +244,9 @@ def exp_ablation_a2c_mc_lr_critic(base_params, device):
 
 def exp_ablation_a2c_mc_hidden(base_params, device):
     run_experiment([
-        {"label": "hidden=64",  "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "hidden_size": 64}},
-        {"label": "hidden=128", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "hidden_size": 128}},
-        {"label": "hidden=256", "agent_name": "A2C_Bootstrap", "params": {**ABLATION, "hidden_size": 256}},
+        {"label": "hidden=64",  "agent_name": "A2C_MC", "params": {**ABLATION, "hidden_size": 64}},
+        {"label": "hidden=128", "agent_name": "A2C_MC", "params": {**ABLATION, "hidden_size": 128}},
+        {"label": "hidden=256", "agent_name": "A2C_MC", "params": {**ABLATION, "hidden_size": 256}},
     ], base_params, device,
        title="A2C MC - Hidden Size Ablation",
        save_name="ablation_a2c_mc_hidden")
@@ -256,8 +268,9 @@ EXPERIMENTS = {
     # Main
     "reinforce":          exp_reinforce,
     "ac":                 exp_ac,
+    "ac_mc":              exp_ac_mc,
     "a2c_td":             exp_a2c_td,
-    "a2c_bootstrap":      exp_a2c_bootstrap,
+    "a2c_mc":             exp_a2c_mc,
     "all":                exp_all,
     # REINFORCE ablations
     "abl_rf_lr":          exp_ablation_reinforce_lr,
@@ -267,10 +280,10 @@ EXPERIMENTS = {
     "abl_td_lr_actor":    exp_ablation_a2c_td_lr_actor,
     "abl_td_lr_critic":   exp_ablation_a2c_td_lr_critic,
     "abl_td_hidden":      exp_ablation_a2c_td_hidden,
-    # A2C_Bootstrap ablations
-    "abl_bs_lr_actor":    exp_ablation_a2c_mc_lr_actor,
-    "abl_bs_lr_critic":   exp_ablation_a2c_mc_lr_critic,
-    "abl_bs_hidden":      exp_ablation_a2c_mc_hidden,
+    # A2C_MC ablations
+    "abl_mc_lr_actor":    exp_ablation_a2c_mc_lr_actor,
+    "abl_mc_lr_critic":   exp_ablation_a2c_mc_lr_critic,
+    "abl_mc_hidden":      exp_ablation_a2c_mc_hidden,
     # ALL ablations
     "all_ablations": exp_all_ablations,
 }
@@ -283,7 +296,7 @@ if __name__ == "__main__":
         choices=list(EXPERIMENTS.keys()),
         help=(
             "Which experiment to run:\n"
-            "  Main : reinforce | ac | a2c_td | a2c_bootstrap | all\n"
+            "  Main : reinforce | ac | a2c_td | a2c_mc | all\n"
             "  REINFORCE ablations : abl_rf_lr | abl_rf_hidden | abl_rf_gamma\n"
             "  A2C_TD ablations    : abl_td_lr_actor | abl_td_lr_critic | abl_td_hidden\n"
             "  A2C_MC ablations    : abl_mc_lr_actor | abl_mc_lr_critic | abl_mc_hidden\n"
