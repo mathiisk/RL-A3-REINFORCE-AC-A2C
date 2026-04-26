@@ -9,11 +9,6 @@ from Config import PGConfig
 from Helpers import smooth, LearningCurvePlot
 from REINFORCEAgent import train_REINFORCE
 from ACAgent import train_AC
-from ACAgent_MC import train_AC_MC
-
-from ACAgent_MC_2 import train_AC_MC_2
-
-# from A2CAgent_TD import train_A2C_TD # unused
 from A2CAgent_MC import train_A2C_MC
 
 
@@ -30,12 +25,6 @@ def train_one_run(agent_name, params, device):
         return train_REINFORCE(params, device)
     elif agent_name == "AC":
         return train_AC(params, device)
-    elif agent_name == "AC_MC":
-        return train_AC_MC(params, device)
-    elif agent_name == "AC_MC_2":
-        return train_AC_MC_2(params, device)
-    # elif agent_name == "A2C_TD":                              # we dont use this 
-    #     return train_A2C_TD(params, device)
     elif agent_name == "A2C_MC":
         return train_A2C_MC(params, device)
     else:
@@ -126,32 +115,7 @@ def exp_ac(base_params, device):
         title="AC on CartPole-v1",
         save_name="ac",
     )
-    
-def exp_ac_mc(base_params, device):
-    run_experiment(
-        [{"label": "AC_MC", "agent_name": "AC_MC", "params": {}}],
-        base_params, device,
-        title="AC MC on CartPole-v1",
-        save_name="ac_mc",
-    )
-    
-    
-def exp_ac_mc_2(base_params, device):
-    run_experiment(
-        [{"label": "AC_MC_2", "agent_name": "AC_MC_2", "params": {}}],
-        base_params, device,
-        title="AC MC 2 on CartPole-v1",
-        save_name="ac_mc_2",
-    )
 
-# unused
-# def exp_a2c_td(base_params, device):
-#     run_experiment(
-#         [{"label": "A2C_TD", "agent_name": "A2C_TD", "params": {}}],
-#         base_params, device,
-#         title="A2C TD on CartPole-v1",
-#         save_name="a2c_td",
-#     )
 
 
 def exp_a2c_mc(base_params, device):
@@ -169,7 +133,6 @@ def exp_all(base_params, device):
         [
             {"label": "REINFORCE",     "agent_name": "REINFORCE",     "params": {}},
             {"label": "AC",            "agent_name": "AC",            "params": {}},
-            {"label": "AC_MC",         "agent_name": "AC_MC",        "params": {}},
             {"label": "A2C_MC",        "agent_name": "A2C_MC",        "params": {}},
         ],
         base_params, device,
@@ -199,8 +162,36 @@ def exp_ablation_reinforce_hidden(base_params, device):
        save_name="ablation_reinforce_hidden")
 
 
+# AC ablations
+def exp_ablation_ac_target(base_params, device):
+    run_experiment([
+        {"label": "tau=0.01, freq=50",  "agent_name": "AC", "params": {**ABLATION, "tau": 0.01, "target_update_freq": 50}},
+        {"label": "tau=0.1,  freq=100", "agent_name": "AC", "params": {**ABLATION, "tau": 0.10, "target_update_freq": 100}},
+        {"label": "tau=1.0,  freq=500", "agent_name": "AC", "params": {**ABLATION, "tau": 1.0,  "target_update_freq": 500}},
+    ], base_params, device,
+       title="AC - Target Network (tau x freq) Ablation",
+       save_name="ablation_ac_target")
+    
+    
+def exp_ablation_ac_lr(base_params, device):
+    run_experiment([
+        {"label": "lr_actor=1e-4, lr_critic=1e-3", "agent_name": "AC", "params": {**ABLATION, "lr_actor": 1e-4, "lr_critic": 1e-3}},
+        {"label": "lr_actor=5e-4, lr_critic=1e-3", "agent_name": "AC", "params": {**ABLATION, "lr_actor": 5e-4, "lr_critic": 1e-3}},
+        {"label": "lr_actor=1e-3, lr_critic=1e-3", "agent_name": "AC", "params": {**ABLATION, "lr_actor": 1e-3, "lr_critic": 1e-3}},
+    ], base_params, device,
+       title="AC — Learning Rate Ablation",
+       save_name="ablation_ac_lr")
 
-# A2C_TD ablations # unused 
+
+def exp_ablation_ac_hidden(base_params, device):
+    run_experiment([
+        {"label": "hidden=64",  "agent_name": "AC", "params": {**ABLATION, "hidden_size": 64}},
+        {"label": "hidden=128", "agent_name": "AC", "params": {**ABLATION, "hidden_size": 128}},
+        {"label": "hidden=256", "agent_name": "AC", "params": {**ABLATION, "hidden_size": 256}},
+    ], base_params, device,
+       title="AC — Hidden Size Ablation",
+       save_name="ablation_ac_hidden")
+
 
 # A2C_MC ablations
 def exp_ablation_a2c_mc_lr_actor(base_params, device):
@@ -231,11 +222,16 @@ def exp_ablation_a2c_mc_hidden(base_params, device):
     ], base_params, device,
        title="A2C MC - Hidden Size Ablation",
        save_name="ablation_a2c_mc_hidden")
+    
+    
 
 
 def exp_all_ablations(base_params, device):
     exp_ablation_reinforce_lr(base_params, device)
     exp_ablation_reinforce_hidden(base_params, device)
+    # exp_ablation_ac_target(base_params, device)
+    # exp_ablation_ac_lr(base_params, device)
+    # exp_ablation_ac_hidden(base_params, device)
     exp_ablation_a2c_mc_lr_actor(base_params, device)
     exp_ablation_a2c_mc_lr_critic(base_params, device)
     exp_ablation_a2c_mc_hidden(base_params, device)
@@ -245,17 +241,15 @@ EXPERIMENTS = {
     # Main
     "reinforce":          exp_reinforce,
     "ac":                 exp_ac,
-    "ac_mc":              exp_ac_mc,
-    "ac_mc_2":            exp_ac_mc_2,
-    # "a2c_td":             exp_a2c_td, # unused
     "a2c_mc":             exp_a2c_mc,
     "all":                exp_all,
     # REINFORCE ablations
     "abl_rf_lr":          exp_ablation_reinforce_lr,
     "abl_rf_hidden":      exp_ablation_reinforce_hidden,
-
-    # no ablations for AC due to its poor performance
-
+    # AC ablations
+    "abl_ac_target":      exp_ablation_ac_target,
+    "abl_ac_lr":          exp_ablation_ac_lr,
+    "abl_ac_hidden":      exp_ablation_ac_hidden,
     # A2C_MC ablations
     "abl_mc_lr_actor":    exp_ablation_a2c_mc_lr_actor,
     "abl_mc_lr_critic":   exp_ablation_a2c_mc_lr_critic,

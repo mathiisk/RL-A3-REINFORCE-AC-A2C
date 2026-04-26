@@ -77,8 +77,7 @@ class ACAgent:
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        if self.steps_done % 100 == 0:
-            self._soft_update_target()
+        
 
     # evaluate() is unchanged
     def evaluate(self, eval_env, eval_episodes=10):
@@ -117,21 +116,25 @@ def train_AC(params, device):
     actions, _ = agent.select_action(states)
 
     while agent.steps_done < params.total_steps:
-
         obs, rewards, terminated, truncated, info = env.step(actions.cpu().numpy())
         dones = terminated | truncated
         next_states = torch.tensor(obs, dtype=torch.float32, device=device)
         next_actions, _ = agent.select_action(next_states)
+
         agent.update(states, actions, rewards, next_states, next_actions, dones)
 
         agent.steps_done += params.num_envs
-        states = next_states
-        actions = next_actions
+
+        if agent.steps_done % params.target_update_freq == 0:
+            agent._soft_update_target()
 
         if agent.steps_done % params.evaluate_every < params.num_envs:
             ret = agent.evaluate(eval_env, eval_episodes=params.eval_episodes)
             eval_returns.append(ret)
             print(f'Steps: {agent.steps_done} | Reward: {ret:.1f}')
+
+        states = next_states
+        actions = next_actions
 
     env.close()
     eval_env.close()
