@@ -10,7 +10,7 @@ from REINFORCEAgent import train_REINFORCE
 from ACAgent import train_AC
 from ACAgent_MC import train_AC_MC
 from A2CAgent_TD import train_A2C_TD
-from A2CAgent_MC import train_A2C_Bootstrap
+from A2CAgent_MC import train_A2C_MC
 
 
 # Shared ablation overrides
@@ -26,8 +26,8 @@ def train_one_run(agent_name, params, device):
         return train_AC(params, device)
     elif agent_name == "A2C_TD":
         return train_A2C_TD(params, device)
-    elif agent_name == "A2C_Bootstrap":
-        return train_A2C_Bootstrap(params, device)
+    elif agent_name == "A2C_MC":
+        return train_A2C_MC(params, device)
     elif agent_name == "AC_MC":
         return train_AC_MC(params, device)
     else:
@@ -178,47 +178,8 @@ def exp_ablation_reinforce_hidden(base_params, device):
        save_name="ablation_reinforce_hidden")
 
 
-def exp_ablation_reinforce_gamma(base_params, device):
-    run_experiment([
-        {"label": "gamma=0.90", "agent_name": "REINFORCE", "params": {**ABLATION, "gamma": 0.90}},
-        {"label": "gamma=0.99", "agent_name": "REINFORCE", "params": {**ABLATION, "gamma": 0.99}},
-        {"label": "gamma=1.00", "agent_name": "REINFORCE", "params": {**ABLATION, "gamma": 1.00}},
-    ], base_params, device,
-       title="REINFORCE — Gamma Ablation",
-       save_name="ablation_reinforce_gamma")
-
 
 # A2C_TD ablations
-
-def exp_ablation_a2c_td_lr_actor(base_params, device):
-    run_experiment([
-        {"label": "lr_actor=1e-4", "agent_name": "A2C_TD", "params": {**ABLATION, "lr_actor": 1e-4}},
-        {"label": "lr_actor=5e-4", "agent_name": "A2C_TD", "params": {**ABLATION, "lr_actor": 5e-4}},
-        {"label": "lr_actor=1e-3", "agent_name": "A2C_TD", "params": {**ABLATION, "lr_actor": 1e-3}},
-    ], base_params, device,
-       title="A2C TD — Actor LR Ablation",
-       save_name="ablation_a2c_td_lr_actor")
-
-
-def exp_ablation_a2c_td_lr_critic(base_params, device):
-    run_experiment([
-        {"label": "lr_critic=1e-4", "agent_name": "A2C_TD", "params": {**ABLATION, "lr_critic": 1e-4}},
-        {"label": "lr_critic=5e-4", "agent_name": "A2C_TD", "params": {**ABLATION, "lr_critic": 5e-4}},
-        {"label": "lr_critic=1e-3", "agent_name": "A2C_TD", "params": {**ABLATION, "lr_critic": 1e-3}},
-    ], base_params, device,
-       title="A2C TD — Critic LR Ablation",
-       save_name="ablation_a2c_td_lr_critic")
-
-
-def exp_ablation_a2c_td_hidden(base_params, device):
-    run_experiment([
-        {"label": "hidden=64",  "agent_name": "A2C_TD", "params": {**ABLATION, "hidden_size": 64}},
-        {"label": "hidden=128", "agent_name": "A2C_TD", "params": {**ABLATION, "hidden_size": 128}},
-        {"label": "hidden=256", "agent_name": "A2C_TD", "params": {**ABLATION, "hidden_size": 256}},
-    ], base_params, device,
-       title="A2C TD — Hidden Size Ablation",
-       save_name="ablation_a2c_td_hidden")
-
 
 # A2C_MC ablations
 
@@ -255,10 +216,6 @@ def exp_ablation_a2c_mc_hidden(base_params, device):
 def exp_all_ablations(base_params, device):
     exp_ablation_reinforce_lr(base_params, device)
     exp_ablation_reinforce_hidden(base_params, device)
-    exp_ablation_reinforce_gamma(base_params, device)
-    exp_ablation_a2c_td_lr_actor(base_params, device)
-    exp_ablation_a2c_td_lr_critic(base_params, device)
-    exp_ablation_a2c_td_hidden(base_params, device)
     exp_ablation_a2c_mc_lr_actor(base_params, device)
     exp_ablation_a2c_mc_lr_critic(base_params, device)
     exp_ablation_a2c_mc_hidden(base_params, device)
@@ -275,11 +232,7 @@ EXPERIMENTS = {
     # REINFORCE ablations
     "abl_rf_lr":          exp_ablation_reinforce_lr,
     "abl_rf_hidden":      exp_ablation_reinforce_hidden,
-    "abl_rf_gamma":       exp_ablation_reinforce_gamma,
-    # A2C_TD ablations
-    "abl_td_lr_actor":    exp_ablation_a2c_td_lr_actor,
-    "abl_td_lr_critic":   exp_ablation_a2c_td_lr_critic,
-    "abl_td_hidden":      exp_ablation_a2c_td_hidden,
+
     # A2C_MC ablations
     "abl_mc_lr_actor":    exp_ablation_a2c_mc_lr_actor,
     "abl_mc_lr_critic":   exp_ablation_a2c_mc_lr_critic,
