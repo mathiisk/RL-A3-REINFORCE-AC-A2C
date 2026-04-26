@@ -8,7 +8,7 @@ from Networks import PolicyNetwork
 from Networks import QValueNetwork
 
 
-class ACAgent_MC():
+class ACAgent_MC_2():
     def __init__(self, state_size, action_size, device, config):
         self.device = device
         self.gamma = config.gamma
@@ -43,21 +43,16 @@ class ACAgent_MC():
         states_tensor = torch.stack(states)
         actions_tensor = torch.stack(actions)
 
-        # Critic: Q(s, a) for taken actions, trained toward MC return
+        # Critic: Q(s,a) for taken actions, regressed onto MC return
         q_values = self.value_net(states_tensor).gather(
             1, actions_tensor.unsqueeze(1)
         ).squeeze(1)
+        critic_loss = ((returns - q_values) ** 2).mean()
 
-        # Actor signal: G_t - Q(s_t, a_t), detached so no grad into critic
-        advantage = (returns - q_values).detach()
-
-        # Actor loss
+        # Actor: plain Q(s,a) as the signal (Eq. 2 from the assignment)
         probs = self.policy_net(states_tensor)
         log_probs = Categorical(probs).log_prob(actions_tensor)
-        actor_loss = (-log_probs * advantage).mean()
-
-        # Critic loss: regress Q(s,a) onto MC return
-        critic_loss = ((returns - q_values) ** 2).mean()
+        actor_loss = (-log_probs * q_values.detach()).mean()
 
         self.actor_optimizer.zero_grad()
         self.critic_optimizer.zero_grad()
