@@ -10,6 +10,9 @@ from Helpers import smooth, LearningCurvePlot
 from REINFORCEAgent import train_REINFORCE
 from ACAgent import train_AC
 from ACAgent_MC import train_AC_MC
+
+from ACAgent_MC_2 import train_AC_MC_2
+
 # from A2CAgent_TD import train_A2C_TD # unused
 from A2CAgent_MC import train_A2C_MC
 
@@ -29,6 +32,8 @@ def train_one_run(agent_name, params, device):
         return train_AC(params, device)
     elif agent_name == "AC_MC":
         return train_AC_MC(params, device)
+    elif agent_name == "AC_MC_2":
+        return train_AC_MC_2(params, device)
     # elif agent_name == "A2C_TD":                              # we dont use this 
     #     return train_A2C_TD(params, device)
     elif agent_name == "A2C_MC":
@@ -128,6 +133,15 @@ def exp_ac_mc(base_params, device):
         base_params, device,
         title="AC MC on CartPole-v1",
         save_name="ac_mc",
+    )
+    
+    
+def exp_ac_mc_2(base_params, device):
+    run_experiment(
+        [{"label": "AC_MC_2", "agent_name": "AC_MC_2", "params": {}}],
+        base_params, device,
+        title="AC MC 2 on CartPole-v1",
+        save_name="ac_mc_2",
     )
 
 # unused
@@ -232,6 +246,7 @@ EXPERIMENTS = {
     "reinforce":          exp_reinforce,
     "ac":                 exp_ac,
     "ac_mc":              exp_ac_mc,
+    "ac_mc_2":            exp_ac_mc_2,
     # "a2c_td":             exp_a2c_td, # unused
     "a2c_mc":             exp_a2c_mc,
     "all":                exp_all,
@@ -269,12 +284,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     torch.set_float32_matmul_precision("high")
-    device = torch.device(
-        "cuda" if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available()
-        else "cpu"
-    )
-    print("Device:", device)
+    device = torch.device("cpu")
+    #     "cuda" if torch.cuda.is_available()
+    #     else "mps" if torch.backends.mps.is_available()
+    #     else "cpu"
+    # )
+    # print("Device:", device)
 
     base_params = PGConfig()
     EXPERIMENTS[args.experiment](base_params, device)
