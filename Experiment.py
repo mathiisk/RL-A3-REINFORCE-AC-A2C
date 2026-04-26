@@ -9,27 +9,25 @@ from Helpers import smooth, LearningCurvePlot
 from REINFORCEAgent import train_REINFORCE
 from ACAgent import train_AC
 from ACAgent_MC import train_AC_MC
-from A2CAgent_TD import train_A2C_TD
+# from A2CAgent_TD import train_A2C_TD # unused
 from A2CAgent_MC import train_A2C_MC
 
 
-# Shared ablation overrides
+# shared ablation overrides, less reps and steps
 ABLATION = {"total_steps": 500_000, "num_rep": 3}
 
-
-#  Core helpers
 
 def train_one_run(agent_name, params, device):
     if agent_name == "REINFORCE":
         return train_REINFORCE(params, device)
     elif agent_name == "AC":
         return train_AC(params, device)
-    elif agent_name == "A2C_TD":
-        return train_A2C_TD(params, device)
-    elif agent_name == "A2C_MC":
-        return train_A2C_MC(params, device)
     elif agent_name == "AC_MC":
         return train_AC_MC(params, device)
+    # elif agent_name == "A2C_TD":                              # we dont use this 
+    #     return train_A2C_TD(params, device)
+    elif agent_name == "A2C_MC":
+        return train_A2C_MC(params, device)
     else:
         raise ValueError(f"Unknown agent: {agent_name}")
 
@@ -122,14 +120,14 @@ def exp_ac_mc(base_params, device):
         save_name="ac_mc",
     )
 
-
-def exp_a2c_td(base_params, device):
-    run_experiment(
-        [{"label": "A2C_TD", "agent_name": "A2C_TD", "params": {}}],
-        base_params, device,
-        title="A2C TD on CartPole-v1",
-        save_name="a2c_td",
-    )
+# unused
+# def exp_a2c_td(base_params, device):
+#     run_experiment(
+#         [{"label": "A2C_TD", "agent_name": "A2C_TD", "params": {}}],
+#         base_params, device,
+#         title="A2C TD on CartPole-v1",
+#         save_name="a2c_td",
+#     )
 
 
 def exp_a2c_mc(base_params, device):
@@ -147,7 +145,7 @@ def exp_all(base_params, device):
         [
             {"label": "REINFORCE",     "agent_name": "REINFORCE",     "params": {}},
             {"label": "AC",            "agent_name": "AC",            "params": {}},
-            {"label": "A2C_TD",        "agent_name": "A2C_TD",        "params": {}},
+            {"label": "AC_MC",         "agent_name": "AC_MC",        "params": {}},
             {"label": "A2C_MC",        "agent_name": "A2C_MC",        "params": {}},
         ],
         base_params, device,
@@ -157,7 +155,6 @@ def exp_all(base_params, device):
 
 
 # REINFORCE ablations
-
 def exp_ablation_reinforce_lr(base_params, device):
     run_experiment([
         {"label": "lr=1e-4", "agent_name": "REINFORCE", "params": {**ABLATION, "lr_actor": 1e-4}},
@@ -179,10 +176,9 @@ def exp_ablation_reinforce_hidden(base_params, device):
 
 
 
-# A2C_TD ablations
+# A2C_TD ablations # unused 
 
 # A2C_MC ablations
-
 def exp_ablation_a2c_mc_lr_actor(base_params, device):
     run_experiment([
         {"label": "lr_actor=1e-4", "agent_name": "A2C_MC", "params": {**ABLATION, "lr_actor": 1e-4}},
@@ -226,12 +222,14 @@ EXPERIMENTS = {
     "reinforce":          exp_reinforce,
     "ac":                 exp_ac,
     "ac_mc":              exp_ac_mc,
-    "a2c_td":             exp_a2c_td,
+    # "a2c_td":             exp_a2c_td, # unused
     "a2c_mc":             exp_a2c_mc,
     "all":                exp_all,
     # REINFORCE ablations
     "abl_rf_lr":          exp_ablation_reinforce_lr,
     "abl_rf_hidden":      exp_ablation_reinforce_hidden,
+
+    # no ablations for AC due to its poor performance
 
     # A2C_MC ablations
     "abl_mc_lr_actor":    exp_ablation_a2c_mc_lr_actor,
@@ -242,6 +240,8 @@ EXPERIMENTS = {
 }
 
 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run PG experiments on CartPole-v1")
     parser.add_argument(
@@ -249,9 +249,9 @@ if __name__ == "__main__":
         choices=list(EXPERIMENTS.keys()),
         help=(
             "Which experiment to run:\n"
-            "  Main : reinforce | ac | a2c_td | a2c_mc | all\n"
+            "  Main : reinforce | ac | ac_mc | a2c_mc | all\n"
             "  REINFORCE ablations : abl_rf_lr | abl_rf_hidden | abl_rf_gamma\n"
-            "  A2C_TD ablations    : abl_td_lr_actor | abl_td_lr_critic | abl_td_hidden\n"
+            # "  A2C_TD ablations    : abl_td_lr_actor | abl_td_lr_critic | abl_td_hidden\n"
             "  A2C_MC ablations    : abl_mc_lr_actor | abl_mc_lr_critic | abl_mc_hidden\n"
             "  All ablations       : all_ablations\n"
         ),
