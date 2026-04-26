@@ -6,6 +6,8 @@ class PGConfig:
     num_envs: int = 8
     evaluate_every: int = 10_000
     eval_episodes: int = 10
+    target_update_freq: int = 100
+    tau: float = 0.5
     
     gamma: float = 0.99
     lr_actor: float = 1e-3
