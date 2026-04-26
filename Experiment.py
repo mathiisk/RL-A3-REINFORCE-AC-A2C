@@ -1,3 +1,4 @@
+import os 
 import numpy as np
 import torch
 import time
@@ -15,6 +16,10 @@ from A2CAgent_MC import train_A2C_MC
 
 # shared ablation overrides, less reps and steps
 ABLATION = {"total_steps": 500_000, "num_rep": 3}
+
+# dir to store json results for plotting
+RESULTS_DIR = "results"
+
 
 
 def train_one_run(agent_name, params, device):
@@ -56,27 +61,29 @@ def average_returns(agent_name, params, device):
 
 
 def run_experiment(experiments, base_params, device, title, save_name):
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+ 
     results = []
     plot = LearningCurvePlot(title=title)
     plot.set_ylim(0, 520)
-
+ 
     for exp in experiments:
         label      = exp["label"]
         agent_name = exp["agent_name"]
         overrides  = exp["params"]
-
+ 
         print(f"\nRunning: {label}")
         params_dict = base_params.__dict__.copy()
         params_dict.update(overrides)
         params = PGConfig(**params_dict)
-
+ 
         mean_curve, std_curve = average_returns(agent_name, params, device)
         timesteps = list(range(
             params.evaluate_every,
             params.total_steps + 1,
             params.evaluate_every,
         ))[:len(mean_curve)]
-
+ 
         plot.add_curve(timesteps, mean_curve, std=std_curve,
                        label=f"{label} (±{std_curve[-1]:.1f})")
         results.append({
@@ -85,12 +92,16 @@ def run_experiment(experiments, base_params, device, title, save_name):
             "mean_returns": mean_curve.tolist(),
             "std_returns":  std_curve.tolist(),
         })
-
+ 
     plot.add_hline(500, label="Optimal (500)")
-    plot.save(f"{save_name}.png")
-    with open(f"{save_name}_results.json", "w") as f:
+ 
+    plot_path = os.path.join(RESULTS_DIR, f"{save_name}.png")
+    json_path = os.path.join(RESULTS_DIR, f"{save_name}_results.json")
+ 
+    plot.save(plot_path)
+    with open(json_path, "w") as f:
         json.dump(results, f, indent=2)
-    print(f"Saved → {save_name}.png  |  {save_name}_results.json")
+    print(f"Saved → {plot_path}  |  {json_path}"
 
 
 # Main experiments
