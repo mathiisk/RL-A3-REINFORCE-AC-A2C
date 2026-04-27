@@ -1,13 +1,11 @@
 """
-Plot.py — Unified plotting utility for DQN and PG experiment results.
-
 Usage examples:
     # Plot all curves from one or more JSON files
     python Plot.py --files dqn_variants_results.json all_results.json
 
     # Select specific labels from each file
     python Plot.py --files dqn_variants_results.json all_results.json \
-                   --labels "Replay+Target DQN" REINFORCE AC A2C_TD A2C_Bootstrap
+                   --labels "Replay+Target DQN" REINFORCE AC A2C_MC
 
     # Custom title and output filename
     python Plot.py --files dqn_variants_results.json all_results.json \
@@ -52,7 +50,7 @@ def plot_from_jsons(json_paths, selected_labels=None, title="Comparison", out="c
             mean = np.array(entry["mean_returns"])
             std = np.array(entry["std_returns"])
 
-            # Trim timesteps to match curve length (in case of early stopping)
+            # trim timesteps to match curve length (in case of early stopping)
             timesteps = timesteps[:len(mean)]
 
             if smoothing_window is not None and len(mean) > smoothing_window:
